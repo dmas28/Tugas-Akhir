@@ -1,2 +1,4 @@
 # Tugas-Akhir
-project tugas akhir ini bertujuan untuk menyelesaikan studi S1 (strata 1) Teknik Komputer di Telkom University
+project tugas akhir ini bertujuan untuk menyelesaikan studi S1 (strata 1) Teknik Komputer di Telkom University, dengan judul ***Sistem Informasi Monitoring Bencana Alam dari Data Media Sosial***. tujuan pengambilan judul ini adalah untuk memanfaatkan besarnya penggunaan media sosial twitter di indonesia, sering sekali ketika bencana alam terjadi para pengguna yang terdampak oleh bencana alam tersebut akan men-tweet tentang opini mereka atau hanya sekedar berkelu kesah tentang apa yang telah mereka alami.
+
+pada project tugas akhir ini digunakan Machine Learning untuk dapat mengklasifikasikan data tweet para pengguna yang terdampak becana alam dan yang tidak terdampak bencana alam, setelah data selesai diklasifikasikan lalu masing-masing tweet akan di mapping berdasarkan geo-location nya masing-masing.
