@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>mapping</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="{% static '/js/legend/src/leafletpanellayers.css' %}" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+   crossorigin=""/>
+
+    <style type="text/css">
+        #mapid {
+            margin-top: 10px;
+            border: 5px solid black;
+            height: 70vh;
+            width: 100%;
+            }
+        #submit {
+            margin-top: 10px;
+            margin-left: 23px;
+            width: 20vh;
+            background-color: lightblue;
+        }
+        #form {
+
+            background-color: lightgrey;
+        }
+        #div1 {
+            height: 30px;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            background-color: lightgray;
+        }
+        #table1 {
+            margin-top: 10px;
+            text-align = left;
+            font-family: Arail;
+            font-size: 15pt;
+            width: 100%;
+            color: black;
+            cellspacing: 0px;
+            cellpadding: 0px;
+        }
+        #div2 {
+            height: 20vh;
+            width: 100%;
+            overflow: auto;
+            overflow-x: hidden;
+        }
+        #table2 {
+            text-align: left;
+            font-family: Arail;
+            font-size: 12pt;
+            width: 100%;
+            color: black;
+            cellspacing: 0px;
+            cellpadding: 0px;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+            <form action="/external/" method="post" id="form">
+                {% csrf_token %}
+                Bencana:
+                <select name="bencana" id="">
+                    <option value="banjir">Banjir</option>
+                    <option value="gempa">Gempa</option>
+                    <option value="longsor">Longsor</option>
+                </select>
+                Since:
+                <input type="text" name="since" required placeholder="yyyy-mm-dd">
+                Until:
+                <input type="text" name="until" required placeholder="yyyy-mm-dd">
+                Kota/Kab:
+                <select name="kota" id="select_kota">
+                    <option value="none">none</option>
+                    {% for i in kota_latlong %}
+                        <option value="{{i}}">{{i}}</option>
+                    {% endfor %}
+                </select>
+                Kecamatan:
+                <input type="text" name="kecamatan" placeholder="Optional">
+                <input type="submit" value="Generate" id="submit">
+            </form>
+
+    <div id="mapid"></div>
+
+    <div id="div1">
+        <table id="table1">
+            <tr>
+                <th>No</th>
+                <th>Username</th>
+                <th>Tweet</th>
+            </tr>
+        </table>
+    </div>
+
+    <div id="div2">
+        <table id="table2">
+            {% for i,j,k in user_twt %}
+            <tr>
+                <td style="padding-left: 10px">{{i}}</td>
+                <td style="padding-left: 280px">{{j}}</td>
+                <td style="padding-left: 650px">{{k}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+<!-- Make sure you put this AFTER Leaflet's CSS -->
+     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+       integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+       crossorigin=""></script>
+
+     <script src="{% static '/js/leaflet.ajax.js' %}"></script>
+     <script src="{% static '/js/legend/src/leafletpanellayers.js' %}"></script>
+
+     <link rel="stylesheet" href="{% static '/js/leafletmarkercluster/dist/MarkerCluster.css' %}" />
+     <link rel="stylesheet" href="{% static '/js/leafletmarkercluster/dist/MarkerCluster.Default.css' %}" />
+     <script src="{% static '/js/leafletmarkercluster/dist/leaflet.markercluster-src.js' %}"></script>
+
+    <script type="text/javascript">
+        var mymap = L.map('mapid').setView([-1.318243, 116.213635], 5);
+        var layer_kita = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw'
+    });
+        mymap.addLayer(layer_kita);
+
+    var indStyle = {
+        fillColor: "purple",
+        "color": "grey",
+        "weight": 1,
+        "opacity": 1
+    };
+    function popUp(f,l){
+        var out = [];
+        if (f.properties){
+            out.push("Wilayah: "+f.properties['NAME_2']);
+            out.push("Provinsi: "+f.properties['NAME_1']);
+            l.bindPopup(out.join("<br />"));
+        }
+    }
+
+    // legend
+
+
+    function iconByName(name) {
+        return '<i class="icon icon-'+name+'"></i>';
+    }
+
+    function featureToMarker(feature, latlng) {
+        return L.marker(latlng, {
+            icon: L.divIcon({
+                className: 'marker-'+feature.properties.amenity,
+                html: iconByName(feature.properties.amenity),
+                iconUrl: '../images/markers/'+feature.properties.amenity+'.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            })
+        });
+    }
+
+    var baseLayers = [
+        {
+            name: "OpenStreetMap",
+            layer: layer_kita
+        }
+    ];
+
+    var overLayers = [
+        {
+            name: "Highlight Wilayah",
+            layer: new L.GeoJSON.AJAX(["{% static '/geojson/kabkota.json' %}"],{onEachFeature:popUp, style:indStyle, pointToLayer:featureToMarker}).addTo(mymap)
+        }
+    ];
+
+    var panelLayers = new L.Control.PanelLayers(baseLayers, overLayers);
+
+    mymap.addControl(panelLayers);
+
+    </script>
+
+    <script type="text/javascript">
+        var markers = L.markerClusterGroup();
+
+        for (let i =0; i < {{koordinat}}.length; i++) {
+            var x = i+1
+            var marker = new L.marker({{koordinat}}[i]);
+            marker.bindPopup('tweet nomor '+x);
+            markers.addLayer(marker);
+        }
+
+        mymap.addLayer(markers);
+    </script>
+</html>
